@@ -2,28 +2,36 @@ package com.oop.shapes;
 
 public class Point {
 
-    private int X;
-    private int Y;
+    private int x;
+    private int y;
 
     public Point(int x, int y) {
-        X = x;
-        Y = y;
+        this.x = x;
+        this.y = y;
     }
 
     public int getX() {
-        return X;
+        return x;
     }
 
     public void setX(int x) {
-        X = x;
+        this.x = x;
     }
 
     public int getY() {
-        return Y;
+        return y;
     }
 
     public void setY(int y) {
-        Y = y;
+        this.y = y;
+    }
+
+    @Override
+    public String toString() {
+        return "Point{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
     }
 
 }

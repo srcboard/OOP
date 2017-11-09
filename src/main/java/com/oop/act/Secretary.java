@@ -1,79 +1,113 @@
 package com.oop.act;
 
 import com.oop.ColorType;
-import com.oop.exceptions.GetPointFromStringException;
+import com.oop.exceptions.EndOfLineParsingException;
+import com.oop.exceptions.RadiusNegativeException;
+import com.oop.exceptions.ShapeNotFoundException;
 import com.oop.shapes.*;
+import com.sun.istack.internal.NotNull;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.logging.Logger;
 
 public class Secretary {
 
-    public Shape getShape(String line) {
-        return new Circle();
+    private static Secretary instance;
+
+    private static Logger LOGGER = Logger.getLogger(Secretary.class.getName());
+
+    private static final String COLOR_AND_POINTS_SEPARATOR = "\\(";
+    private static final String POINTS_SEPARATOR = ";";
+    private static final String COORDINATE_SEPARATOR = ",";
+    private static final String END_OF_LINE_SEPARATOR = ")";
+
+    private Secretary() {
     }
 
-    public ArrayList<Shape> getListOfShapes() {
+    public static Secretary getInstance() {
+        if (instance == null) {
+            instance = new Secretary();
+        }
+        return instance;
+    }
 
-        ArrayList<Shape> shapes = new ArrayList<Shape>();
+    public ArrayList<Shape> getListOfShapes() throws IOException {
 
-        try {
+        ArrayList<Shape> shapes = new ArrayList<>();
 
-            BufferedReader in = new BufferedReader(new FileReader(new File(getClass().getResource("/data").getFile())));
-            try {
+        try (BufferedReader in = new BufferedReader(new FileReader(new File(getClass().getResource("/data").getFile())))) {
 
-                String line;
+            String fullLine;
+            while ((fullLine = in.readLine()) != null) {
 
-                while ((line = in.readLine()) != null) {
+                String line = fullLine;
 
-                    ColorType colorType;
-                    ArrayList<Point> points = new ArrayList<Point>();
-                    Radius radius = null;
+                ColorType color;
+                ArrayList<Point> points;
+                Radius radius = null;
 
-                    String[] parts = line.split("\\(");
+                try {
+                    line = initalParseOperator(fullLine);
+                } catch (EndOfLineParsingException e) {
+                    LOGGER.warning("Invalid line format (EndOfLineParsingException): " + fullLine);
+                    continue;
+                }
 
-                    if (line.startsWith("(")) {
-                        colorType = parsColorType("");
-                        points = getPoints(parts[0]);
-                        if (points.size() == 1) {
-                            radius = getRadius(parts[0]);
-                        }
+                String[] parts = line.split(COLOR_AND_POINTS_SEPARATOR);
+                if (line.startsWith(COLOR_AND_POINTS_SEPARATOR)) {
 
-                    } else {
-                        colorType = parsColorType(line.startsWith("(") ? "" : parts[0]);
-                        points = getPoints(parts[1]);
-                        if (points.size() == 1) {
-                            radius = getRadius(parts[1]);
+                    color = parsColorType("");
+                    points = parsPoints(parts[0]);
+                    if (points.size() == 1) {
+                        try {
+                            radius = parsRadius(parts[0]);
+                        } catch (RadiusNegativeException e) {
+                            LOGGER.warning("Invalid line format (RadiusNegativeException): " + fullLine);
                         }
                     }
 
-                    if (points.size() == 4) {
-                        shapes.add(new Rectangle(points.get(0), points.get(1), points.get(2), points.get(3)));
+                } else {
+
+                    color = parsColorType(line.startsWith(COLOR_AND_POINTS_SEPARATOR) ? "" : parts[0]);
+                    points = parsPoints(parts[1]);
+                    if (points.size() == 1) {
+                        try {
+                            radius = parsRadius(parts[1]);
+                        } catch (RadiusNegativeException e) {
+                            LOGGER.warning("Invalid line format (RadiusNegativeException): " + fullLine);
+                        }
                     }
 
                 }
 
+                try {
+                    Shape shape = getShape(color, points, radius);
+                    if (shape != null) {
+                        shapes.add(shape);
+                    }
+                } catch (ShapeNotFoundException e) {
+                    LOGGER.warning("Invalid line format (ShapeNotFoundException): " + fullLine);
+                }
 
-            } catch (GetPointFromStringException e) {
-                e.printStackTrace();
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                in.close();
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
 
+        }
 
         return shapes;
 
     }
 
+    private String initalParseOperator(@NotNull String line) throws EndOfLineParsingException {
+        if (line.endsWith(END_OF_LINE_SEPARATOR)) {
+            return line.substring(0, line.length() - 1);
+        } else {
+            throw new EndOfLineParsingException();
+        }
+    }
 
     private ColorType parsColorType(String line) {
 
@@ -85,28 +119,17 @@ public class Secretary {
 
     }
 
-    private ArrayList<Point> getPoints(String line) throws Exception {
+    private ArrayList<Point> parsPoints(String line) {
 
         ArrayList<Point> points = new ArrayList<Point>();
 
-        if (line.endsWith(")")) {
-            line = line.substring(0, line.length() - 1);
-        } else {
-//            throw new Exception();
-            return points;
-        }
-
-        String[] parts = line.split(";");
+        String[] parts = line.split(POINTS_SEPARATOR);
         for (String point : parts) {
 
-            String[] coordinates = point.split(",");
-            if (coordinates.length != 2) {
-                System.out.println(Arrays.toString(coordinates));
-//                throw new GetPointFromStringException();
-                continue;
+            String[] coordinates = point.split(COORDINATE_SEPARATOR);
+            if (coordinates.length == 2) {
+                points.add(new Point(Integer.valueOf(coordinates[0].trim()), Integer.valueOf(coordinates[1].trim())));
             }
-
-            points.add(new Point(Integer.valueOf(coordinates[0].trim()), Integer.valueOf(coordinates[1].trim())));
 
         }
 
@@ -114,21 +137,14 @@ public class Secretary {
 
     }
 
-    Radius getRadius(String line) throws Exception {
+    private Radius parsRadius(String line) throws RadiusNegativeException {
 
         Radius radius = null;
 
-        if (line.endsWith(")")) {
-            line = line.substring(0, line.length() - 1);
-        } else {
-//            throw new Exception();
-            return radius;
-        }
+        String[] points = line.split(POINTS_SEPARATOR);
+        for (String point : points) {
 
-        String[] parts = line.split(";");
-        for (String point : parts) {
-
-            String[] coordinates = point.split(",");
+            String[] coordinates = point.split(COORDINATE_SEPARATOR);
             if (coordinates.length > 1) {
                 continue;
             }
@@ -136,20 +152,32 @@ public class Secretary {
             int r = Integer.valueOf(coordinates[0].trim());
 
             if (r <= 0) {
-//                throw new Exception();
-                continue;
+                throw new RadiusNegativeException();
             }
 
             radius = new Radius(r);
 
         }
 
-        if (radius == null) {
-//            throw new Exception("");
-            return radius;
+        return radius;
+
+    }
+
+    private Shape getShape(ColorType color, ArrayList<Point> points, Radius radius) throws ShapeNotFoundException {
+
+        if (points.size() == 4) {
+            return new Rectangle(points.get(0), points.get(1), points.get(2), points.get(3), color);
         }
 
-        return radius;
+        if (points.size() == 3) {
+            return new Triangle(points.get(0), points.get(1), points.get(2), color);
+        }
+
+        if (points.size() == 1 && radius != null) {
+            return new Circle(points.get(0), radius, color);
+        }
+
+        throw new ShapeNotFoundException();
 
     }
 

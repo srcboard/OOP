@@ -2,18 +2,25 @@ package com.oop.shapes;
 
 public class Radius {
 
-    private int R;
+    private int r;
 
     public Radius(int r) {
-        R = r;
+        this.r = r;
     }
 
     public int getR() {
-        return R;
+        return r;
     }
 
     public void setR(int r) {
-        R = r;
+        this.r = r;
+    }
+
+    @Override
+    public String toString() {
+        return "Radius{" +
+                "r=" + r +
+                '}';
     }
 
 }
