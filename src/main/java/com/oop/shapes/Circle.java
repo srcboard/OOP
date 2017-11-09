@@ -1,6 +1,8 @@
 package com.oop.shapes;
 
 import com.oop.ColorType;
+import com.oop.coordinates.Point;
+import com.oop.coordinates.Radius;
 
 public class Circle implements Shape {
 

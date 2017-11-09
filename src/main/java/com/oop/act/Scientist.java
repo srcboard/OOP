@@ -3,6 +3,7 @@ package com.oop.act;
 import com.oop.shapes.Shape;
 
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class Scientist {
 
@@ -20,11 +21,16 @@ public class Scientist {
 
     public void calculateParameters(ArrayList<Shape> shapes) {
 
-        for (Shape shape : shapes) {
-            System.out.println(shape);
-            System.out.println("Perimeter=" + shape.getPerimeter());
-        }
+        shapes.forEach(e -> {
+            System.out.println(e);
+            System.out.println("Perimeter=" + e.getPerimeter());
+        });
 
+        System.out.println("Total=" + shapes
+                .stream()
+                .collect(Collectors.summarizingDouble(Shape::getPerimeter))
+                .getSum());
+        
     }
 
 }

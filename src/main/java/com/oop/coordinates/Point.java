@@ -1,4 +1,4 @@
-package com.oop.shapes;
+package com.oop.coordinates;
 
 public class Point {
 

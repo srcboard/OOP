@@ -1,6 +1,9 @@
 package com.oop.act;
 
 import com.oop.ColorType;
+import com.oop.ToRefactoring;
+import com.oop.coordinates.Point;
+import com.oop.coordinates.Radius;
 import com.oop.exceptions.EndOfLineParsingException;
 import com.oop.exceptions.RadiusNegativeException;
 import com.oop.exceptions.ShapeNotFoundException;
@@ -51,7 +54,7 @@ public class Secretary {
                 Radius radius = null;
 
                 try {
-                    line = initalParseOperator(fullLine);
+                    line = initialParseOperator(fullLine);
                 } catch (EndOfLineParsingException e) {
                     LOGGER.warning("Invalid line format (EndOfLineParsingException): " + fullLine);
                     continue;
@@ -101,7 +104,7 @@ public class Secretary {
 
     }
 
-    private String initalParseOperator(@NotNull String line) throws EndOfLineParsingException {
+    private String initialParseOperator(@NotNull String line) throws EndOfLineParsingException {
         if (line.endsWith(END_OF_LINE_SEPARATOR)) {
             return line.substring(0, line.length() - 1);
         } else {
@@ -163,6 +166,7 @@ public class Secretary {
 
     }
 
+    @ToRefactoring
     private Shape getShape(ColorType color, ArrayList<Point> points, Radius radius) throws ShapeNotFoundException {
 
         if (points.size() == 4) {

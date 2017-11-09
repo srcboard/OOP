@@ -1,6 +1,7 @@
 package com.oop.shapes;
 
 import com.oop.ColorType;
+import com.oop.coordinates.Point;
 
 public class Triangle implements Shape {
 
